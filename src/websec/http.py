@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from urllib.parse import urlsplit
+from websec.models import Finding, Severity, Status
 
 import httpx
 
@@ -65,3 +66,57 @@ def collect_http(target: str) -> HTTPResult:
         final_url=str(response.url),
         responses=responses,
     )
+
+def analyze_redirects(result: HTTPResult) -> list[Finding]:
+    findings = []
+
+    urls = [response.url for response in result.responses]
+    schemes = [urlsplit(url).scheme.lower() for url in urls]
+
+    for index in range(len(schemes) - 1):
+        if schemes[index] == "https" and schemes[index + 1] == "http":
+            findings.append(
+                Finding(
+                    check_id="HTTP-001",
+                    title="HTTPS to HTTP downgrade",
+                    severity=Severity.HIGH,
+                    status=Status.FAIL,
+                    description="A redirect moves traffic from HTTPS to HTTP.",
+                    evidence=f"{urls[index]} -> {urls[index + 1]}",
+                    recommendation=(
+                        "Keep redirects and destination resources on HTTPS."
+                    ),
+                )
+            )
+
+    if schemes[0] == "http":
+        if schemes[-1] == "https":
+            findings.append(
+                Finding(
+                    check_id="HTTP-002",
+                    title="HTTP upgraded to HTTPS",
+                    severity=Severity.INFO,
+                    status=Status.PASS,
+                    description="The request chain ends on HTTPS.",
+                    evidence=" -> ".join(urls),
+                    recommendation="Continue enforcing HTTPS.",
+                )
+            )
+        else:
+            findings.append(
+                Finding(
+                    check_id="HTTP-003",
+                    title="HTTP request did not reach HTTPS",
+                    severity=Severity.MEDIUM,
+                    status=Status.WARNING,
+                    description=(
+                        "The HTTP request chain did not finish on HTTPS."
+                    ),
+                    evidence=" -> ".join(urls),
+                    recommendation=(
+                        "Configure HTTP requests to redirect to HTTPS."
+                    ),
+                )
+            )
+
+    return findings

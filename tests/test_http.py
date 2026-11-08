@@ -2,6 +2,8 @@ import httpx
 import pytest
 
 from websec.http import collect_http, validate_url
+from websec.http import HTTPResponse, HTTPResult, analyze_redirects
+from websec.models import Status
 
 @pytest.mark.parametrize(
     "target",
@@ -44,4 +46,61 @@ def test_collect_http(monkeypatch):
     assert result.responses[0].status_code == 200
     assert (
         result.responses[0].headers["x-content-type-options"] == "nosniff"
+    )
+
+def make_http_result(urls):
+    responses = [
+        HTTPResponse(url=url, status_code=301, headers={})
+        for url in urls[:-1]
+    ]
+
+    responses.append(
+        HTTPResponse(url=urls[-1], status_code=200, headers={})
+    )
+
+    return HTTPResult(
+        target=urls[0],
+        final_url=urls[-1],
+        responses=responses,
+    )
+
+def test_https_downgrade():
+    result = make_http_result([
+        "https://example.com",
+        "http://example.com",
+    ])
+
+    findings = analyze_redirects(result)
+
+    assert any(
+        finding.check_id == "HTTP-001"
+        and finding.status == Status.FAIL
+        for finding in findings
+    )
+
+def test_http_upgrade():
+    result = make_http_result([
+        "http://example.com",
+        "https://example.com",
+    ])
+
+    findings = analyze_redirects(result)
+
+    assert any(
+        finding.check_id == "HTTP-002"
+        and finding.status == Status.PASS
+        for finding in findings
+    )
+
+def test_http_without_upgrade():
+    result = make_http_result([
+        "http://example.com",
+    ])
+
+    findings = analyze_redirects(result)
+
+    assert any(
+        finding.check_id == "HTTP-003"
+        and finding.status == Status.WARNING
+        for finding in findings
     )
