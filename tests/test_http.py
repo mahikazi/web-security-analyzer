@@ -104,3 +104,25 @@ def test_http_without_upgrade():
         and finding.status == Status.WARNING
         for finding in findings
     )
+
+def test_empty_http_response():
+    result = HTTPResult(
+        target="https://example.com",
+        final_url="https://example.com",
+        responses=[],
+    )
+
+    findings = analyze_redirects(result)
+
+    assert len(findings) == 1
+    assert findings[0].check_id == "HTTP-004"
+    assert findings[0].status == Status.UNKNOWN
+
+def test_http_without_redirects():
+    result = make_http_result([
+        "https://example.com",
+    ])
+
+    findings = analyze_redirects(result)
+
+    assert findings == []

@@ -70,6 +70,19 @@ def collect_http(target: str) -> HTTPResult:
 def analyze_redirects(result: HTTPResult) -> list[Finding]:
     findings = []
 
+    if not result.responses:
+        return [
+            Finding(
+                check_id="HTTP-004",
+                title="No HTTP response data",
+                severity=Severity.INFO,
+                status=Status.UNKNOWN,
+                description="No HTTP responses were available for analysis.",
+                evidence="The response list is empty.",
+                recommendation="Check whether HTTP collection completed successfully.",
+            )
+        ]
+
     urls = [response.url for response in result.responses]
     schemes = [urlsplit(url).scheme.lower() for url in urls]
 
