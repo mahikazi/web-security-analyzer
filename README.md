@@ -1,7 +1,7 @@
 
 # WEBSEC: Web Security Analyzer
 
-A Python-based tool for analyzing web security configurations, including HTTPS redirects and HTTP security headers.
+A Python-based tool for analyzing web security configurations, including HTTPS redirects, HTTP security headers, and TLS certificates.
 
 Built as a cybersecurity portfolio project to practice Python, networking, web security, and automated testing.
 
@@ -17,16 +17,21 @@ Currently implemented:
   - X-Frame-Options
   - X-Content-Type-Options
   - Referrer-Policy
+- TLS certificate and encryption analysis:
+  - Certificate chain and hostname verification
+  - Certificate expiration checks
+  - Negotiated TLS version detection
+  - Negotiated cipher information
 - Structured findings with severity, evidence, and recommendations
 - Automated tests using Pytest
 
-Security header checks use basic configuration rules and do not replace a full security assessment.
+Security header checks use basic configuration rules and do not replace a full security assessment. TLS analysis reports the protocol and cipher negotiated during a single connection.
 
 ## Tech Stack
 
-Python · HTTPX · Pytest · Git
+Python · HTTPX · SSL · Pytest · Git
 
-Planned: Python SSL, Rich, Streamlit
+Planned: Rich, Streamlit
 
 ## Installation
 
@@ -48,21 +53,21 @@ python3 -m pip install -e ".[dev]"
 python3 -m pytest -v
 ```
 
-The HTTP and header analyzers currently work as Python modules. A command-line interface is planned.
+The HTTP, security header, and TLS analyzers currently work as Python modules. A unified scanner and command-line interface are planned.
 
 ## Development Roadmap
 
-[x] Project setup and security finding models
-[x] HTTP collection and redirect analysis
-[x] HTTP security header analysis
-[ ] TLS certificate and encryption analysis
-[ ] Unified security scanner
-[ ] CLI, JSON reports, and Streamlit dashboard
-[ ] Final testing, documentation, and release
-
+- [x] Project setup and security finding models
+- [x] HTTP collection and redirect analysis
+- [x] HTTP security header analysis
+- [x] TLS certificate and encryption analysis
+- [ ] Unified security scanner
+- [ ] CLI, JSON reports, and Streamlit dashboard
+- [ ] Final testing, documentation, and release
 
 ## Status
 
 **In development.**
-- The HTTP and security header modules are implemented.
+
+- The HTTP, security header, and TLS modules are implemented.
 - The complete scanning interface is still being built.
